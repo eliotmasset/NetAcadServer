@@ -34,7 +34,7 @@ app.get("/pop/:url", (req, res) => {
 
 app.get("/q/:q", (req, res) => {
 
-    smartFindOne( req, res)
+    smartFindOne(req, res)
 
 })
 
@@ -50,29 +50,33 @@ function smartFindOne(req, res) {
     }
 
     console.log("q")
-    examModel.findOne({ title: { $regex: '.*' + cleanQ + '.*' }  }, (err, question) => {
-        if (err)
-            return res.send(err) 
+    examModel.findOne({ "questions.title": { $regex: '.*' + cleanQ + '.*' } },
+        { questions: { $elemMatch: { title: { $regex: '.*' + cleanQ + '.*' } } } },
+        (err, question) => {
+            if (err)
+                return res.send(err)
 
-        if (!question) {
-            try {
-                cleanQ = query.split("").splice(8).join("")
-            } catch (error) {
+            if (!question) {
+                try {
+                    cleanQ = query.split("").splice(8).join("")
+                } catch (error) {
 
-            }
-            return examModel.findOne({ title: { $regex: '.*' + cleanQ + '.*' }  }, (err, question) => {
+                }
+                return examModel.findOne({ "questions.title": { $regex: '.*' + cleanQ + '.*' } },
+                    { questions: { $elemMatch: { title: { $regex: '.*' + cleanQ + '.*' } } } },
+                    (err, question) => {
+                        res.status(200)
+                        return res.json(question)
+                    })
+
+
+            } else {
                 res.status(200)
                 return res.json(question)
-            })
+            }
 
 
-        } else {
-            res.status(200)
-            return res.json(question)
-        }
-
-
-    })
+        })
 }
 app.get("/all", (req, res) => {
     const query = new RegExp(req.params.q, 'i')
@@ -90,18 +94,18 @@ app.get("/all", (req, res) => {
 
 async function populateTheDb(req, res) {
     var scrapper = new Scrapper(req.params.url)
-console.log("######## populating with link "+req.params.url)
+    console.log("######## populating with link " + req.params.url)
     return await scrapper.getExam().then(result => {
-         
-if(result.questions.length>0)
-examModel.collection.insertOne(result, (err, result) => {
 
-            if (err)
-                return res.send(err)
+        if (result.questions.length > 0)
+            examModel.collection.insertOne(result, (err, result) => {
 
-            res.send(result)
+                if (err)
+                    return res.send(err)
 
-        })
+                res.send(result)
+
+            })
     })
 }
 
@@ -124,39 +128,39 @@ app.get("/populate/:pin", (req, res) => {
 async function populateFullDb() {
     for (var i in examLinks) {
         try {
-             var scrapper = new Scrapper(examLinks[i])
-        console.log("############# " + i + " of " + examLinks.length + " ################")
+            var scrapper = new Scrapper(examLinks[i])
+            console.log("############# " + i + " of " + examLinks.length + " ################")
 
-        await scrapper.getQuestions().then(results => {
-            console.log("---> Questions retrieved: " + results.length)
-            var cleanResults = []
-            for (var j in results) {
-                if (results[j].title) { 
+            await scrapper.getQuestions().then(results => {
+                console.log("---> Questions retrieved: " + results.length)
+                var cleanResults = []
+                for (var j in results) {
+                    if (results[j].title) {
 
-                    results[j].identifier =results[j].title.replace(/\ /g,"")
+                        results[j].identifier = results[j].title.replace(/\ /g, "")
 
-                    cleanResults.push(results[j])
+                        cleanResults.push(results[j])
+                    }
+
+                }
+                if (cleanResults.length > 0)
+                    examModel.collection.insertMany(cleanResults, (err, result) => {
+
+                        if (err)
+                            return console.log("---> " + examLinks[i] + " failed", err)
+
+                        console.log("---> " + (examLinks[i]) + " successful")
+
+                    })
+                else {
+                    console.log("Got no questions for: ", examLinks[i])
                 }
 
-            }
-if(cleanResults.length>0)
-examModel.collection.insertMany(cleanResults, (err, result) => {
-
-                if (err)
-                    return console.log("---> " + examLinks[i] + " failed",err)
-
-                console.log("---> " + (examLinks[i]) + " successful")
-
             })
-else{
-    console.log("Got no questions for: ",examLinks[i])
-}
-
-        })
         } catch (error) {
-            console.log("EXIT ERROR *** "+examLinks[i])
-        } 
-       
+            console.log("EXIT ERROR *** " + examLinks[i])
+        }
+
     }
 
     lockPop = false
