@@ -39,7 +39,7 @@ class Scrapper {
 
 
 
-    async getQuestions() {
+    async getExam() {
 
 
 
@@ -49,8 +49,12 @@ class Scrapper {
 
 
         const $ = cheerio.load(pageStr)
+        var exam = {}
+        exam.questions = []
 
-        var questions = []
+        exam.name = this.prettifyString($("div.entry-content > h2").text())
+        exam.pageUrl = this.pageUrl
+        exam.version = ""
 
         //loops through the questions list   
         var questionsEl = this.getElement($, this.questionsSelectors, $("body"))
@@ -74,15 +78,33 @@ class Scrapper {
                 }
 
                 question.title = this.prettifyString(title)
-                question.solution = this.getSolution($, questionEl)
+                var solutionResult = this.getSolution($, questionEl) 
+                if (solutionResult.state === "CHOICES"){
+                    console.log( "#################",solutionResult)
+                    question.solution = {
+                        choices: solutionResult.choices,
+                        explanation: solutionResult.explanation
+                    }
+                }else if (solutionResult.state === "HTML_SOLUTION") {
+                        question.htmlSolution = solutionResult.htmlSolution
+                    }else{
+                        question.solution=solutionResult
+                    }
 
-                question.exam = $("div.entry-content > h2").text()
-                question.version = ""
-                questions.push(question)
+
+
+                if (!question.title) {
+
+                    console.log("question has no title: ", this.pageUrl)
+                    return
+                }
+                question.identifier = question.title.replace(/\ /g, "")
+
+                exam.questions.push(question)
 
             })
-        return questions
 
+        return exam
 
     }
     getPageString() {
@@ -102,8 +124,19 @@ class Scrapper {
     getSolution($, questionEl) {
 
         var solution = { choices: [] }
+        var hasAnswer = false
+        var choicesResult = this.getChoicesElement($, this.choicesSelectors, questionEl)
+       console.log("choices#########", choicesResult.state)
+             if (choicesResult.state === "CHOICES_ELEMENT") {
+            var choicesEl = choicesResult.element
+            solution.state = "CHOICES"
 
-        var choicesEl = this.getElement($, this.choicesSelectors, questionEl)
+        } else {
+            solution.state = "HTML_SOLUTION"
+            solution.htmlSolution = choicesResult.htmlSolution
+            return solution
+        }
+
         if (choicesEl)
             choicesEl.each((choiceIndex, choiceEl) => {
                 var choice = {}
@@ -113,8 +146,6 @@ class Scrapper {
                     cleanChoice = this.prettifyString($(choiceEl).text())
                     try {
                         cleanChoice = this.prettifyString($(choiceEl).text()).split("Explanation:")[0]
-                        console.log("hi yaaaa")
-
                         var expl = $('div[class="itemfeedback"]', choiceEl).text() || this.prettifyString($(choiceEl).text()).split("explanation")[1]
                     } catch (error) {
                         console.log("hi yaaaa", error)
@@ -130,7 +161,7 @@ class Scrapper {
 
                 choice.name = cleanChoice
                 if ($('span[style*="color"]', choiceEl).text()) {
-
+                    hasAnswer = true
                     choice.isAnswer = true
                     solution.choices.push(choice)
 
@@ -142,9 +173,12 @@ class Scrapper {
 
 
             })
-
-
-        return solution
+console.log("#########",solution)
+        if (hasAnswer)
+            return solution
+        else
+            console.log("Question has no answer: ", this.pageUrl, JSON.stringify(solution))
+        return {}
 
     }
 
@@ -153,7 +187,7 @@ class Scrapper {
         try {
 
             output = input.replace(/[\r\n( )]+/g, " ").trim()
-
+            output = input.replace(/Question\sID\s\d+/g, "")
         } catch (error) {
 
         }
@@ -181,9 +215,35 @@ class Scrapper {
         }
 
         if (element)
-            console.log("FATAL ERROR _______________", this.pageUrl, selectors, "_______________________")
+            console.log("FATAL ERROR _______________", $(root).html(), "_______________________")
         return false
     }
+
+
+    getChoicesElement($, selectors, root) {
+        var element = null
+        var result = {}
+        for (var i = 0; i < selectors.length; i++) {
+            element = $(selectors[i], root)
+
+
+            if (element && element.length > 0) {
+                result.state = "CHOICES_ELEMENT"
+                result.element = element
+                return result
+
+
+            }
+
+
+        }
+
+        result.state = "HTML_SOLUTION"
+        result.htmlSolution = $(root).html()
+
+        return result
+    }
+
 
 }
 

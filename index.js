@@ -14,7 +14,7 @@
 const express = require('express')
 const app = express()
 const Scrapper = require('./Scrapper')
-const questionModel = require('./questionModel')
+const examModel = require('./examModel')
 const examLinks = require("./allExamLinks")
 
 
@@ -50,7 +50,7 @@ function smartFindOne(req, res) {
     }
 
     console.log("q")
-    questionModel.findOne({ title: { $regex: '.*' + cleanQ + '.*' }  }, (err, question) => {
+    examModel.findOne({ title: { $regex: '.*' + cleanQ + '.*' }  }, (err, question) => {
         if (err)
             return res.send(err) 
 
@@ -60,7 +60,7 @@ function smartFindOne(req, res) {
             } catch (error) {
 
             }
-            return questionModel.findOne({ title: { $regex: '.*' + cleanQ + '.*' }  }, (err, question) => {
+            return examModel.findOne({ title: { $regex: '.*' + cleanQ + '.*' }  }, (err, question) => {
                 res.status(200)
                 return res.json(question)
             })
@@ -76,7 +76,7 @@ function smartFindOne(req, res) {
 }
 app.get("/all", (req, res) => {
     const query = new RegExp(req.params.q, 'i')
-    questionModel.find({}, (err, question) => {
+    examModel.find({}, (err, question) => {
         if (err)
             return res.send(err)
         res.status(200)
@@ -91,19 +91,10 @@ app.get("/all", (req, res) => {
 async function populateTheDb(req, res) {
     var scrapper = new Scrapper(req.params.url)
 console.log("######## populating with link "+req.params.url)
-    return await scrapper.getQuestions().then(results => {
-        var cleanResults=[]
-        for (var j in results) {
-            if (results[j].title) { 
-
-                results[j].identifier =  "#"+req.params.url + "-" + results[j].title.replace(/\ /g,"")
-
-                cleanResults.push(results[j])
-            }
-
-        }
-
-        questionModel.collection.insertMany(cleanResults, (err, result) => {
+    return await scrapper.getExam().then(result => {
+         
+if(result.questions.length>0)
+examModel.collection.insertOne(result, (err, result) => {
 
             if (err)
                 return res.send(err)
@@ -115,20 +106,20 @@ console.log("######## populating with link "+req.params.url)
 }
 
 var lockPop = false
-// app.get("/populate/:pin", (req, res) => {
+app.get("/populate/:pin", (req, res) => {
 
-//     if (req.params.pin == "some-fake-pin" && !lockPop) {
-//         lockPop = true
-//         populateFullDb()
-//         res.send("populating db")
-//     }
-//     else if (lockPop) {
-//         res.send("Pupulating db in process. Locked! ")
-//     } else {
-//         res.send("INCORRECT PIN")
-//     }
+    if (req.params.pin == "some-fake-pin" && !lockPop) {
+        lockPop = true
+        populateFullDb()
+        res.send("populating db")
+    }
+    else if (lockPop) {
+        res.send("Pupulating db in process. Locked! ")
+    } else {
+        res.send("INCORRECT PIN")
+    }
 
-// })
+})
 
 async function populateFullDb() {
     for (var i in examLinks) {
@@ -142,21 +133,25 @@ async function populateFullDb() {
             for (var j in results) {
                 if (results[j].title) { 
 
-                    results[j].identifier = "#"+examLinks[i] + "-" + results[j].title.replace(/\ /g,"")
+                    results[j].identifier =results[j].title.replace(/\ /g,"")
 
                     cleanResults.push(results[j])
                 }
 
             }
-
-            questionModel.collection.insertMany(cleanResults, (err, result) => {
+if(cleanResults.length>0)
+examModel.collection.insertMany(cleanResults, (err, result) => {
 
                 if (err)
-                    return console.log("---> " + examLinks[i] + " failed")
+                    return console.log("---> " + examLinks[i] + " failed",err)
 
                 console.log("---> " + (examLinks[i]) + " successful")
 
             })
+else{
+    console.log("Got no questions for: ",examLinks[i])
+}
+
         })
         } catch (error) {
             console.log("EXIT ERROR *** "+examLinks[i])

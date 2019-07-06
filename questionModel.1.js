@@ -6,8 +6,10 @@ mongoose.connect('mongodb://localhost/ccnaSelectDb', { useNewUrlParser: true });
 const Schema = mongoose.Schema;
 
 const questionSchema = new Schema({
-    title: String,
+    title: String,  
+    questionImage: String,
     identifier:{type:String,unique:true},
+    pageUrl: String,
     solution: {
         choices: [
             {
@@ -15,6 +17,13 @@ const questionSchema = new Schema({
                 isAnswer: Boolean,
             }
         ],
+        choiceImages: [
+            {
+                name: String,
+                isAnswer: Boolean,
+            }
+        ],
+        solutionImage:String,
         explanation:String,
     },
     exam: String,
