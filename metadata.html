@@ -89,7 +89,7 @@
                     examId,
                     password: getPassword()
                 }
-                postData('http://localhost:3000/updateExam', data)
+                postData('http://ccna.aimuhire.com/updateExam', data)
                     .then(data => {
                         console.log(data)
                         if (data.nModified > 0){
@@ -127,7 +127,7 @@
                 link = encodeURIComponent(link)
             else
                 link = ""
-            var url = "http://localhost:3000/loadExamForUpdate/" + link
+            var url = "http://ccna.aimuhire.com/loadExamForUpdate/" + link
 
             fetch(url).then(function (response) {
                 response.text().then(function (text) {
