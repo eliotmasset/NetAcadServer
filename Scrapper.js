@@ -79,8 +79,7 @@ class Scrapper {
 
                 question.title = this.prettifyString(title)
                 var solutionResult = this.getSolution($, questionEl) 
-                if (solutionResult.state === "CHOICES"){
-                    console.log( "#################",solutionResult)
+                if (solutionResult.state === "CHOICES"){ 
                     question.solution = {
                         choices: solutionResult.choices,
                         explanation: solutionResult.explanation
@@ -103,7 +102,6 @@ class Scrapper {
                 exam.questions.push(question)
 
             })
-
         return exam
 
     }
@@ -126,14 +124,14 @@ class Scrapper {
         var solution = { choices: [] }
         var hasAnswer = false
         var choicesResult = this.getChoicesElement($, this.choicesSelectors, questionEl)
-       console.log("choices#########", choicesResult.state)
-             if (choicesResult.state === "CHOICES_ELEMENT") {
+              if (choicesResult.state === "CHOICES_ELEMENT") {
             var choicesEl = choicesResult.element
             solution.state = "CHOICES"
 
         } else {
             solution.state = "HTML_SOLUTION"
             solution.htmlSolution = choicesResult.htmlSolution
+            hasAnswer = true
             return solution
         }
 
@@ -173,7 +171,7 @@ class Scrapper {
 
 
             })
-console.log("#########",solution)
+
         if (hasAnswer)
             return solution
         else
@@ -215,7 +213,7 @@ console.log("#########",solution)
         }
 
         if (element)
-            console.log("FATAL ERROR _______________", $(root).html(), "_______________________")
+            console.log("####SelectorError__________",selectors)
         return false
     }
 

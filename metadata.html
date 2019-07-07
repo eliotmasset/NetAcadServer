@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Update Exam Metadata</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        div {
+            padding: 0 20%;
+            margin-top: 150px;
+            justify-content: center;
+
+        }
+
+        #status {
+            margin-top: 100px;
+            display: block;
+            text-align: center;
+            font-size: 3em;
+            color: rgba(0, 0, 0, 0.575);
+        }
+
+        input,
+        button {
+            border: 0px;
+            outline: none;
+            margin: 10px;
+            font-size: 1.2em;
+            display: block;
+            width: 100%;
+            border-bottom: 2px rgb(0, 54, 21) solid;
+            border-left: 2px #749e00 solid;
+            padding-left: 10px;
+        }
+
+        input[type=submit]:active,
+        button:active {
+            background: #749e00;
+            border-bottom: 2px #749e00 solid;
+            border-left: 2px #749e00 solid;
+            border-right: grey 2px solid;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div>
+        <form action="" onsubmit="return false" class="">
+            <input placeholder="link" type="text" id="link" id="">
+            <input placeholder="name" type="text" id="name" id="">
+            <input placeholder="version" type="text" id="version" id="">
+            <input placeholder="password" type="password" id="password" id="">
+
+            <input type="submit" id="update" value="Update">
+            <button type="button" id="loadNew">Load New</button>
+            <button type="button" id="loadLink">Load Link</button>
+        </form>
+        <span id="status">Status</span>
+    </div>
+
+    <script>
+        var examId = 0
+        window.onload = () => {
+            fetchData()
+
+            document.getElementById("loadLink").addEventListener("click", (e) => {
+                fetchData(getLink())
+            })
+
+            document.getElementById("loadNew").addEventListener("click", (e) => {
+                fetchData()
+            })
+
+            document.getElementById("update").addEventListener("click", (e) => {
+
+                disableControls(true)
+                setStatus("Updating")
+                var data = {
+                    name: getName(),
+                    version: getVersion(),
+                    examId,
+                    password: getPassword()
+                }
+                postData('http://localhost:3000/updateExam', data)
+                    .then(data => {
+                        console.log(data)
+                        if (data.nModified > 0){
+                            setStatus("Success")
+                            setTimeout(() => {
+                                fetchData()
+                            }, 2000);
+
+                        } 
+                        else if (data.nModified === 0)
+                            setStatus("No changes made")
+                        else if (data.message)
+                            setStatus(data.message)
+                        else
+                            setStatus("Uncaught Error")
+
+                        disableControls(false)
+                        clearInterval(updateInterId)
+                    })
+                    .catch(error => console.error(error));
+
+
+                //remember clearInterval
+                var updateInterId = setInterval(() => {
+                    if (getStatus().length < 11)
+                        setStatus(getStatus() + ".")
+                    else setStatus("Updating")
+                    console.log(getStatus())
+                }, 1000);
+            })
+        }
+
+        function fetchData(link) {
+            if (link)
+                link = encodeURIComponent(link)
+            else
+                link = ""
+            var url = "http://localhost:3000/loadExamForUpdate/" + link
+
+            fetch(url).then(function (response) {
+                response.text().then(function (text) {
+
+                    var data = JSON.parse(text)
+                    console.log(data)
+                    if (response.status != 200)
+                        return setStatus("Error loading data")
+                    setStatus("Data loaded")
+                    examId = data._id
+                    setLink(data.pageUrl)
+                    setName(data.name)
+                    setVersion(data.version)
+
+                    document.getElementById("name").style.borderLeft="2px #749e00 solid" 
+
+                    document.getElementById("version").style.borderLeft="2px #749e00 solid"
+              
+                    smartInitEmptyFields(data.pageUrl)
+
+
+                })
+            })
+        }
+
+
+
+
+
+        function postData(url = '', data = {}) {
+            return fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json());
+        }
+
+
+
+        function disableControls(state) {
+            document.getElementById("link").disabled = state
+            document.getElementById("name").disabled = state
+            document.getElementById("version").disabled = state
+            document.getElementById("loadNew").disabled = state
+            document.getElementById("loadLink").disabled = state
+            document.getElementById("update").disabled = state
+        }
+
+        function smartInitEmptyFields(url) {
+            try {
+
+                if (!getVersion()){
+                     setVersion(url.match(/v\-\d*\-\d*\-\d*/)[0].replace("-", " ").replace(/\-/g, "."))
+                     document.getElementById("version").style.borderLeft="2px solid red"
+                }
+                           } catch (error) {
+                console.log(error)
+
+            }
+
+            try {
+                if (!getName()){
+                
+                    setName(url.split("/")[url.split("/").length - 2].replace(/\-/g, " "))
+                    document.getElementById("name").style.borderLeft="2px solid red"
+              
+                }
+            } catch (error) {
+                console.log(error)
+
+            }
+        }
+        function setStatus(text) {
+            document.getElementById("status").innerText = text
+
+        }
+
+        function setLink(text) {
+            document.getElementById("link").value = text
+
+        }
+        function setName(text) {
+            document.getElementById("name").value = text
+
+        }
+
+
+        function setVersion(text) {
+            document.getElementById("version").value = text
+
+        }
+
+
+        function getStatus() {
+            return document.getElementById("status").innerText
+
+        }
+
+        function getPassword() {
+            return document.getElementById("password").value
+
+        }
+        function getLink() {
+            return document.getElementById("link").value
+
+        }
+        function getName() {
+            return document.getElementById("name").value
+
+        }
+
+
+        function getVersion() {
+            return document.getElementById("version").value
+
+        }
+    </script>
+</body>
+
+</html>

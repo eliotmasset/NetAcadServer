@@ -12,12 +12,15 @@
  * 
  */
 const express = require('express')
-const app = express()
+var bodyParser = require('body-parser')
+
 const Scrapper = require('./Scrapper')
 const examModel = require('./examModel')
 const examLinks = require("./allExamLinks")
+const credentials = require("./credentials")
 
-
+const app = express()
+app.use(bodyParser.json())
 app.use((req, res, next) => {
     res.append('Access-Control-Allow-Origin', ['*']);
     res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -49,7 +52,6 @@ function smartFindOne(req, res) {
         cleanQ = query
     }
 
-    console.log("q")
     examModel.findOne({ "questions.title": { $regex: '.*' + cleanQ + '.*' } },
         { questions: { $elemMatch: { title: { $regex: '.*' + cleanQ + '.*' } } } },
         (err, question) => {
@@ -92,22 +94,7 @@ app.get("/all", (req, res) => {
 })
 
 
-async function populateTheDb(req, res) {
-    var scrapper = new Scrapper(req.params.url)
-    console.log("######## populating with link " + req.params.url)
-    return await scrapper.getExam().then(result => {
 
-        if (result.questions.length > 0)
-            examModel.collection.insertOne(result, (err, result) => {
-
-                if (err)
-                    return res.send(err)
-
-                res.send(result)
-
-            })
-    })
-}
 
 var lockPop = false
 app.get("/populate/:pin", (req, res) => {
@@ -125,41 +112,51 @@ app.get("/populate/:pin", (req, res) => {
 
 })
 
-async function populateFullDb() {
-    for (var i in examLinks) {
-        try {
-            var scrapper = new Scrapper(examLinks[i])
-            console.log("############# " + i + " of " + examLinks.length + " ################")
 
-            await scrapper.getQuestions().then(results => {
-                console.log("---> Questions retrieved: " + results.length)
-                var cleanResults = []
-                for (var j in results) {
-                    if (results[j].title) {
+async function populateTheDb(req, res) {
+    var scrapper = new Scrapper(req.params.url)
+    console.log("######## populating with link " + req.params.url)
+    return await scrapper.getExam().then(result => {
 
-                        results[j].identifier = results[j].title.replace(/\ /g, "")
+        if (result.questions.length > 0)
+            examModel.collection.insertOne(result, (err, result) => {
 
-                        cleanResults.push(results[j])
-                    }
+                if (err)
+                    return res.send(err)
 
-                }
-                if (cleanResults.length > 0)
-                    examModel.collection.insertMany(cleanResults, (err, result) => {
-
-                        if (err)
-                            return console.log("---> " + examLinks[i] + " failed", err)
-
-                        console.log("---> " + (examLinks[i]) + " successful")
-
-                    })
-                else {
-                    console.log("Got no questions for: ", examLinks[i])
-                }
+                res.send(result)
 
             })
+    })
+}
+
+
+async function populateFullDb() {
+    for (var i in examLinks) {
+
+        try {
+            var scrapper = new Scrapper(examLinks[i])
+            console.log(`####### ${i} of ${examLinks.length} #######`)
+            await scrapper.getExam().then(result => {
+                console.log("Retrieved  " + result.questions.length + " questions")
+                console.log("linkstats " + result.questions.length + " " + examLinks[i])
+
+                if (result.questions.length > 0)
+                    examModel.collection.insertOne(result, (err, result) => {
+
+                        if (err)
+                            console.log(`#######InsertError  ${examLinks[i]} #######`, err)
+                        console.log(`#######Success ${examLinks[i]} #######`)
+
+                    })
+
+            })
+
         } catch (error) {
-            console.log("EXIT ERROR *** " + examLinks[i])
+            console.log(`#######ExitError  ${examLinks[i]} #######`, error)
+
         }
+
 
     }
 
@@ -167,5 +164,45 @@ async function populateFullDb() {
 
 }
 
+
+
+///////////////////////////////////////////////////////////////////////////
+
+
+app.get("/loadExamForUpdate/:url?", (req, res) => {
+ 
+    if(req.params.url){
+        var condition ={ pageUrl: req.params.url }
+
+    }else{
+        var condition ={ pageUrl: /ccna\-/i ,version:"" }
+
+    }
+    examModel.findOne(condition,"_id pageUrl version name", (err, result) => {
+        if (err)
+            return res.status(400).json(err)
+        if (!result)
+          return  res.status(404).json(result)
+        return res.json(result)
+    })
+})
+
+app.post("/updateExam",(req,res)=>{  
+if(credentials.password!=req.body.password)
+return res.status(403).json({message:"Incorrect password"})
+examModel.updateOne({_id:req.body.examId},{name:req.body.name,version:req.body.version},(err,result)=>{
+    console.log(err,result)
+
+    if(result)
+    return res.json(result)
+})
+
+
+})
+
+app.get("/metadata",(req,res)=>{
+
+    res.sendFile(__dirname+"/metadata.html")
+})
 app.listen(3000)
 console.log("sitati") 
