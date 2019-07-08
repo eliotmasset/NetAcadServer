@@ -109,7 +109,10 @@
                         disableControls(false)
                         clearInterval(updateInterId)
                     })
-                    .catch(error => console.error(error));
+                    .catch(error =>       {
+                        disableControls(false)
+                        setStatus("Error updating exam.")
+                    });
 
 
                 //remember clearInterval
