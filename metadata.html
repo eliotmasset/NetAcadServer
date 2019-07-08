@@ -199,8 +199,17 @@
                      setVersion(url.match(/v\-\d*\-\d*\-\d*/)[0].replace("-", " ").replace(/\-/g, "."))
                      document.getElementById("version").style.borderLeft="2px solid red"
                 }
-                if(!getVersion)
-                setVersion("V 1")
+
+                if (!getVersion()){
+                     setVersion(url.match(/v\-\d*\-\d*/)[0].replace("-", " ").replace(/\-/g, "."))
+                     document.getElementById("version").style.borderLeft="2px solid red"
+                }
+
+                if (!getVersion()){
+                     setVersion("V 1")
+                     document.getElementById("version").style.borderLeft="2px solid red"
+                }
+              
                            } catch (error) {
                 console.log(error)
 
