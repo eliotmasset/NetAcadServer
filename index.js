@@ -175,7 +175,7 @@ app.get("/loadExamForUpdate/:url?", (req, res) => {
         var condition ={ pageUrl: req.params.url }
 
     }else{
-        var condition ={ pageUrl: /ccna\-/i ,version:"" }
+        var condition ={ version:"" }
 
     }
     examModel.findOne(condition,"_id pageUrl version name", (err, result) => {
