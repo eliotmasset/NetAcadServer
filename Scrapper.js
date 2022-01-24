@@ -63,6 +63,9 @@ class Scrapper {
 
         question.title = this.prettifyString(title);
         var solutionResult = this.getSolution($, questionEl);
+        if(solutionResult.src != undefined && solutionResult.src != "" && solutionResult.src != null){
+          question.src = solutionResult.src;
+        }
         if (solutionResult.state === "CHOICES") {
           question.solution = {
             choices: solutionResult.choices,

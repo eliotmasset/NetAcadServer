@@ -6,7 +6,8 @@ mongoose.connect('mongodb://localhost:27017/ccnaSelectDb', { useNewUrlParser: tr
 const Schema = mongoose.Schema;
 
 const questionSchema = new Schema({
-    title: String,  
+    title: String,
+    src: String,
     questionImage: String,
     identifier:{type:String,unique:true},
     pageUrl: String,
