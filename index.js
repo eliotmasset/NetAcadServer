@@ -46,6 +46,7 @@ app.get("/q/:q", (req, res) => {
 async function smartFindOne(req, res) {
   var query = req.params.q;
   let cleanQ = query.split("?").length > 1 ? query.split("?")[0] : query;
+  console.log(cleanQ);
   let queryTries = 0;
   while (queryTries < 3) {
     let halfSliceCharCount = cleanQ.length < 20 ? 4 : 8;
