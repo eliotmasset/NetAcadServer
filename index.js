@@ -98,7 +98,7 @@ var lockPop = false;
 app.get("/populate/", (req, res) => {
   lockPop = true;
   populateFullDb();
-  return res.send("populating db");
+  return res.send("populating db");y
 });
 
 async function populateTheDb(req, res) {

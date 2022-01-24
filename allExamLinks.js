@@ -1,6 +1,7 @@
 module.exports = ["https://examans.com/ccna1-v7-0/ccna-1-v7-0-final-exam-answers-full-introduction-to-networks-answers/",
 "https://examans.com/ccna1-v7-0/modules-1-3-basic-network-connectivity-and-communications-exam-answers/",
 "https://examans.com/ccna1-v7-0/modules-4-7-ethernet-concepts-exam-answers/",
+"https://infraexam.com/ccna1-v7/ccna1-v7-itnv7-modules-4-7-ethernet-concepts-exam-answers/",
 "https://examans.com/ccna1-v7-0/modules-8-10-communicating-between-networks-exam-answers/",
 "https://examans.com/ccna1-v7-0/modules-11-13-ip-addressing-exam-answers/",
 "https://examans.com/ccna1-v7-0/modules-14-15-network-application-communications-exam-answers/",

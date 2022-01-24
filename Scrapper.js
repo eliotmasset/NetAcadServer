@@ -24,9 +24,10 @@ class Scrapper {
       "div.entry-content > ol > li",
     ];
     this.choicesSelectors = [
+      "img[class='lazyloaded']",
       'li[class="wpProQuiz_questionListItem"]',
       "ul > li",
-    ];
+    ]
   }
 
   async getExam() {
@@ -110,40 +111,44 @@ class Scrapper {
       return solution;
     }
 
+    let hasImage = false;
     if (choicesEl)
       choicesEl.each((choiceIndex, choiceEl) => {
         var choice = {};
         var cleanChoice = "";
         //try catch hell?
-        try {
-          cleanChoice = this.prettifyString($(choiceEl).text());
+        if(element.prop("tagName")!="IMG"){
           try {
-            cleanChoice = this.prettifyString($(choiceEl).text()).split(
-              "Explanation:"
-            )[0];
-            var expl =
-              $('div[class="itemfeedback"]', choiceEl).text() ||
-              this.prettifyString($(choiceEl).text()).split("explanation")[1];
+            cleanChoice = this.prettifyString($(choiceEl).text());
+            try {
+              cleanChoice = this.prettifyString($(choiceEl).text()).split(
+                "Explanation:"
+              )[0];
+              var expl =
+                $('div[class="itemfeedback"]', choiceEl).text() ||
+                this.prettifyString($(choiceEl).text()).split("explanation")[1];
+            } catch (error) {
+              console.log("hi yaaaa", error);
+            }
+            if (expl) solution.explanation = this.prettifyString(expl);
           } catch (error) {
-            console.log("hi yaaaa", error);
+            console.log("Error cleaning answer...", error);
+            cleanChoice = $(choiceEl).text();
           }
-          if (expl) solution.explanation = this.prettifyString(expl);
-        } catch (error) {
-          console.log("Error cleaning answer...", error);
-          cleanChoice = $(choiceEl).text();
-        }
 
-        choice.name = cleanChoice;
-        if ($('span[style*="color"]', choiceEl).text()) {
-          hasAnswer = true;
-          choice.isAnswer = true;
-          solution.choices.push(choice);
+          choice.name = cleanChoice;
+          if ($('span[style*="color"]', choiceEl).text()) {
+            hasAnswer = true;
+            choice.isAnswer = true;
+            solution.choices.push(choice);
+          } else {
+            choice.isAnswer = false;
+            solution.choices.push(choice);
+          }
         } else {
-          choice.isAnswer = false;
-          solution.choices.push(choice);
+          solution.src = element.attr('src');
         }
       });
-
     if (hasAnswer) return solution;
     else
       console.log(
@@ -185,6 +190,10 @@ class Scrapper {
       element = $(selectors[i], root);
 
       if (element && element.length > 0) {
+        if(element.prop("tagName")=="IMG"){
+          result.src = element.attr('src');
+          break;
+        }
         result.state = "CHOICES_ELEMENT";
         result.element = element;
         return result;
