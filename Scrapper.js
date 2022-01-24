@@ -120,8 +120,8 @@ class Scrapper {
         var choice = {};
         var cleanChoice = "";
         //try catch hell?
-        console.log($(choiceEl));
-        console.log($(choiceEl).prop("tagName"));
+        //console.log($(choiceEl));
+        //console.log($(choiceEl).prop("tagName"));
         if($(choiceEl).prop("tagName")!="IMG") {
           try {
             cleanChoice = this.prettifyString($(choiceEl).text());

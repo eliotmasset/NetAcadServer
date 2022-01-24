@@ -119,7 +119,7 @@ async function populateFullDb() {
   for (var i in examLinks) {
     try {
       var scrapper = new Scrapper(examLinks[i]);
-      console.log(`####### ${i} of ${examLinks.length} #######`);
+      //console.log(`####### ${i} of ${examLinks.length} #######`);
       await scrapper.getExam().then((result) => {
         //console.log("Retrieved  " + result.questions.length + " questions");
         //console.log(
