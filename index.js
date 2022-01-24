@@ -12,6 +12,8 @@
  *
  */
 const express = require("express");
+const fs = require("fs");
+const https = require('https');
 var bodyParser = require("body-parser");
 
 const Scrapper = require("./Scrapper");
@@ -22,6 +24,12 @@ const credentials = require("./credentials");
 const port = 3000;
 
 const app = express();
+
+const httpsServer = https.createServer({
+  key: fs.readFileSync('/etc/letsencrypt/live/eliotmasset.fr/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/eliotmasset.fr/fullchain.pem'),
+}, app);
+
 
 app.use(bodyParser.json());
 app.use((req, res, next) => {
@@ -171,5 +179,5 @@ app.post("/updateExam", (req, res) => {
 app.get("/metadata", (req, res) => {
   res.sendFile(__dirname + "/metadata.html");
 });
-app.listen(port);
+httpsServer.listen(port);
 console.log(`started server on port ${port}`);
