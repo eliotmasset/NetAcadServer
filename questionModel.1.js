@@ -1,7 +1,7 @@
 
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost/ccnaSelectDb', { useNewUrlParser: true });
+mongoose.connect('mongodb://localhost:27017', { useNewUrlParser: true });
 
 const Schema = mongoose.Schema;
 
