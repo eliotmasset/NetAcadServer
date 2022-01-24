@@ -73,6 +73,7 @@ function findQuestionFromExamCollections(cleanQuery) {
       { questions: { $elemMatch: { title: { $regex: `.*${cleanQuery}.*` } } } },
       (err, question) => {
         if (err) {
+          console.log("error");
           reject(err);
         } else {
           resolve(question);
