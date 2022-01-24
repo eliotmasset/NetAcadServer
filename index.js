@@ -121,10 +121,10 @@ async function populateFullDb() {
       var scrapper = new Scrapper(examLinks[i]);
       console.log(`####### ${i} of ${examLinks.length} #######`);
       await scrapper.getExam().then((result) => {
-        console.log("Retrieved  " + result.questions.length + " questions");
-        console.log(
-          "linkstats " + result.questions.length + " " + examLinks[i]
-        );
+        //console.log("Retrieved  " + result.questions.length + " questions");
+        //console.log(
+        //  "linkstats " + result.questions.length + " " + examLinks[i]
+        //);
 
         if (result.questions.length > 0)
           examModel.collection.insertOne(result, (err, result) => {
