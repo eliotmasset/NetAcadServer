@@ -95,16 +95,10 @@ app.get("/all", (req, res) => {
 });
 
 var lockPop = false;
-app.get("/populate/:pin", (req, res) => {
-  if (req.params.pin != credentials.authToken) {
-    return res.send("INCORRECT PIN");
-  }
-  if (!lockPop) {
-    lockPop = true;
-    populateFullDb();
-    return res.send("populating db");
-  }
-  res.send("Pupulating db in process. Locked! ");
+app.get("/populate/", (req, res) => {
+  lockPop = true;
+  populateFullDb();
+  return res.send("populating db");
 });
 
 async function populateTheDb(req, res) {
@@ -162,8 +156,6 @@ app.get("/loadExamForUpdate/:url?", (req, res) => {
 });
 
 app.post("/updateExam", (req, res) => {
-  if (credentials.password != req.body.password)
-    return res.status(403).json({ message: "Incorrect password" });
   examModel.updateOne(
     { _id: req.body.examId },
     { name: req.body.name, version: req.body.version },
