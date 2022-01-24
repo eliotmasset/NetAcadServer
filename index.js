@@ -78,7 +78,7 @@ function findQuestionFromExamCollections(cleanQuery) {
         } else {
           console.log("question :");
           console.log(question);
-          console.log(question.questions.solution);
+          console.log(question.questions[0].solution);
           resolve(question);
         }
       }
