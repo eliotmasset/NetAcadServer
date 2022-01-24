@@ -120,7 +120,7 @@ class Scrapper {
         var choice = {};
         var cleanChoice = "";
         //try catch hell?
-        if(element.prop("tagName")!="IMG"){
+        if($(choiceEl).prop("tagName")!="IMG"){
           try {
             cleanChoice = this.prettifyString($(choiceEl).text());
             try {
