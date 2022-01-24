@@ -189,8 +189,10 @@ class Scrapper {
   getChoicesElement($, selectors, root) {
     var element = null;
     var result = {};
+    console.log("la");
     for (var i = 0; i < selectors.length; i++) {
       element = $(selectors[i], root);
+      console.log(element);
 
       if (element && element.length > 0) {
         if(element.prop("tagName")=="IMG"){
